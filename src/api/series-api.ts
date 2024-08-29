@@ -5,6 +5,7 @@ import { clone, merge } from '../helpers/strict-type-checks';
 
 import { BarPrice } from '../model/bar';
 import { Coordinate } from '../model/coordinate';
+import { CreateRectangleOptions, RectangleOptions } from '../model/custom-rectangle';
 import { MismatchDirection } from '../model/plot-list';
 import { CreatePriceLineOptions, PriceLineOptions } from '../model/price-line-options';
 import { RangeImpl } from '../model/range-impl';
@@ -25,9 +26,11 @@ import { checkItemsAreOrdered, checkPriceLineOptions, checkSeriesValuesType } fr
 import { getSeriesDataCreator } from './get-series-data-creator';
 import { IPriceLine } from './iprice-line';
 import { IPriceScaleApi } from './iprice-scale-api';
+import { IRectangle } from './irectangle';
 import { BarsInfo, ISeriesApi } from './iseries-api';
 import { priceLineOptionsDefaults } from './options/price-line-options-defaults';
 import { PriceLine } from './price-line-api';
+import { Rectangle } from './rectangle-api';
 
 export class SeriesApi<TSeriesType extends SeriesType> implements ISeriesApi<TSeriesType> {
 	protected _series: Series<TSeriesType>;
@@ -180,6 +183,16 @@ export class SeriesApi<TSeriesType extends SeriesType> implements ISeriesApi<TSe
 
 	public removePriceLine(line: IPriceLine): void {
 		this._series.removePriceLine((line as PriceLine).priceLine());
+	}
+
+	public createRectangle(options: CreateRectangleOptions): IRectangle {
+		const strictOptions = merge(clone({}), options) as RectangleOptions;
+		const rect = this._series.createRectangle(strictOptions);
+		return new Rectangle(rect);
+	}
+
+	public removeRectangle(rect: IRectangle): void {
+		this._series.removeRectangle((rect as Rectangle).rectangle());
 	}
 
 	public seriesType(): TSeriesType {

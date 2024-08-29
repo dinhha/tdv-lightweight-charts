@@ -2,6 +2,7 @@ import { IPriceFormatter } from '../formatters/iprice-formatter';
 
 import { BarPrice } from '../model/bar';
 import { Coordinate } from '../model/coordinate';
+import { CreateRectangleOptions } from '../model/custom-rectangle';
 import { MismatchDirection } from '../model/plot-list';
 import { CreatePriceLineOptions } from '../model/price-line-options';
 import { SeriesMarker } from '../model/series-markers';
@@ -15,6 +16,7 @@ import { Range, Time } from '../model/time-data';
 import { SeriesDataItemTypeMap } from './data-consumer';
 import { IPriceLine } from './iprice-line';
 import { IPriceScaleApi } from './iprice-scale-api';
+import { IRectangle } from './irectangle';
 
 /**
  * Represents a range of bars and the number of bars outside the range.
@@ -236,6 +238,10 @@ export interface ISeriesApi<TSeriesType extends SeriesType> {
 	 * ```
 	 */
 	createPriceLine(options: CreatePriceLineOptions): IPriceLine;
+
+	createRectangle(options: CreateRectangleOptions): IRectangle;
+
+	removeRectangle(rect: IRectangle): void;
 
 	/**
 	 * Removes the price line that was created before.
