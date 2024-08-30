@@ -84,6 +84,7 @@ export class CustomRectangle {
 			return null;
 		}
 
+
 		const firstValue = series.firstValue();
 		const priceRange = priceScale.priceRange();
 
@@ -93,9 +94,9 @@ export class CustomRectangle {
 
 		let fromPrice = this._options.fromPrice;
 
-		if (priceRange.minValue() > fromPrice) {
-			fromPrice = priceRange.minValue();
-		}
+		// if (priceRange.minValue() > fromPrice) {
+		// 	fromPrice = priceRange.minValue();
+		// }
 
 		return priceScale.priceToCoordinate(fromPrice, firstValue.value);
 	}
@@ -144,9 +145,9 @@ export class CustomRectangle {
 
 		let toPrice = this._options.toPrice;
 
-		if (priceRange.maxValue() < toPrice) {
-			toPrice = priceRange.maxValue();
-		}
+		// if (priceRange.maxValue() < toPrice) {
+		// 	toPrice = priceRange.maxValue();
+		// }
 
 		return priceScale.priceToCoordinate(toPrice, firstValue.value);
 	}

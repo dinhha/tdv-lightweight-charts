@@ -30,6 +30,7 @@ import { BarPrice, BarPrices } from './bar';
 import { IChartModelBase } from './chart-model';
 import { Coordinate } from './coordinate';
 import { CustomPriceLine } from './custom-price-line';
+import { CustomPriceLineRay, PriceLineRayOptions } from './custom-price-line-ray';
 import { CustomRectangle, RectangleOptions } from './custom-rectangle';
 import { isDefaultPriceScale } from './default-price-scale';
 import { CustomData, CustomSeriesWhitespaceData, ICustomSeriesPaneView, WhitespaceCheck } from './icustom-series';
@@ -153,6 +154,7 @@ export class Series<T extends SeriesType> extends PriceDataSource implements IDe
 	private readonly _priceLineView: SeriesPriceLinePaneView = new SeriesPriceLinePaneView(this);
 	private readonly _customPriceLines: CustomPriceLine[] = [];
 	private readonly _customRectangles: CustomRectangle[] = [];
+	private readonly _customPriceLineRays: CustomPriceLineRay[] = [];
 	private readonly _baseHorizontalLineView: SeriesHorizontalBaseLinePaneView = new SeriesHorizontalBaseLinePaneView(this);
 	private _paneView!: IUpdatablePaneView | SeriesCustomPaneView;
 	private readonly _lastPriceAnimationPaneView: SeriesLastPriceAnimationPaneView | null = null;
@@ -362,6 +364,21 @@ export class Series<T extends SeriesType> extends PriceDataSource implements IDe
 		this.model().updateSource(this);
 	}
 
+	public createPriceLineRay(options: PriceLineRayOptions): CustomPriceLineRay {
+		const result = new CustomPriceLineRay(this, options);
+		this._customPriceLineRays.push(result);
+		this.model().updateSource(this);
+		return result;
+	}
+
+	public removePriceLineRay(line: CustomPriceLineRay): void {
+		const index = this._customPriceLineRays.indexOf(line);
+		if (index !== -1) {
+			this._customPriceLineRays.splice(index, 1);
+		}
+		this.model().updateSource(this);
+	}
+
 	public seriesType(): T {
 		return this._seriesType;
 	}
@@ -452,6 +469,9 @@ export class Series<T extends SeriesType> extends PriceDataSource implements IDe
 		const rectangleViews = this._customRectangles.map((rect: CustomRectangle) => rect.paneView());
 		res.push(...rectangleViews);
 
+		const priceLineRayViews = this._customPriceLineRays.map((line: CustomPriceLineRay) => line.paneView());
+		res.push(...priceLineRayViews);
+
 		return res;
 	}
 
@@ -480,6 +500,7 @@ export class Series<T extends SeriesType> extends PriceDataSource implements IDe
 		return [
 			this._panePriceAxisView,
 			...this._customPriceLines.map((line: CustomPriceLine) => line.labelPaneView()),
+			...this._customPriceLineRays.map((line: CustomPriceLineRay) => line.labelPaneView()),
 		];
 	}
 
@@ -490,6 +511,9 @@ export class Series<T extends SeriesType> extends PriceDataSource implements IDe
 		const result = [...this._priceAxisViews];
 		for (const customPriceLine of this._customPriceLines) {
 			result.push(customPriceLine.priceAxisView());
+		}
+		for (const customPriceLineRay of this._customPriceLineRays) {
+			result.push(customPriceLineRay.priceAxisView());
 		}
 		this._primitives.forEach((wrapper: SeriesPrimitiveWrapper) => {
 			result.push(...wrapper.priceAxisViews());
@@ -535,6 +559,10 @@ export class Series<T extends SeriesType> extends PriceDataSource implements IDe
 
 		for (const customPriceLine of this._customPriceLines) {
 			customPriceLine.update();
+		}
+
+		for (const customPriceLineRay of this._customPriceLineRays) {
+			customPriceLineRay.update();
 		}
 
 		for (const customeRect of this._customRectangles) {

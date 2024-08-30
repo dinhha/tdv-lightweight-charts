@@ -54,14 +54,19 @@ export class RectangleRenderer extends BitmapCoordinatesPaneRenderer {
 			return;
 		}
 
-		const x0 = Math.round(this._data.x0 * horizontalPixelRatio);
-		const y0 = Math.round(this._data.y0 * verticalPixelRatio);
-		const x1 = Math.round(this._data.x1 * horizontalPixelRatio);
-		const y1 = Math.round(this._data.y1 * verticalPixelRatio);
+		let x0 = Math.round(this._data.x0 * horizontalPixelRatio);
+		let y0 = Math.round(this._data.y0 * verticalPixelRatio);
+		let x1 = Math.round(this._data.x1 * horizontalPixelRatio);
+		let y1 = Math.round(this._data.y1 * verticalPixelRatio);
 
-		if (x1 < 0 || x0 > bitmapSize.width || y1 < 0 || y0 > bitmapSize.height) {
-			return;
-		}
+		x0 = Math.min(x0, bitmapSize.width);
+		y0 = Math.min(y0, bitmapSize.height);
+		x1 = Math.max(0, x1);
+		y1 = Math.max(0, y1);
+
+		// if (x1 < 0 || x0 > bitmapSize.width || y1 < 0 || y0 > bitmapSize.height) {
+		// 	return;
+		// }
 
 		// Draw the rectangle
 		ctx.fillStyle = this._data.fillColor;

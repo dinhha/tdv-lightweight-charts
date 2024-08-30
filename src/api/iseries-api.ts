@@ -2,6 +2,7 @@ import { IPriceFormatter } from '../formatters/iprice-formatter';
 
 import { BarPrice } from '../model/bar';
 import { Coordinate } from '../model/coordinate';
+import { CreatePriceLineRayOptions } from '../model/custom-price-line-ray';
 import { CreateRectangleOptions } from '../model/custom-rectangle';
 import { SeriesDataItemTypeMap } from '../model/data-consumer';
 import { Time } from '../model/horz-scale-behavior-time/types';
@@ -16,6 +17,7 @@ import {
 import { Range } from '../model/time-data';
 
 import { IPriceLine } from './iprice-line';
+import { IPriceLineRay } from './iprice-line-ray';
 import { IPriceScaleApi } from './iprice-scale-api';
 import { IRectangle } from './irectangle';
 import { ISeriesPrimitive } from './iseries-primitive-api';
@@ -299,6 +301,10 @@ export interface ISeriesApi<
 	createRectangle(options: CreateRectangleOptions): IRectangle;
 
 	removeRectangle(rect: IRectangle): void;
+
+	createPriceLineRay(options: CreatePriceLineRayOptions): IPriceLineRay;
+
+	removePriceLineRay(rect: IPriceLineRay): void;
 
 	/**
 	 * Removes the price line that was created before.

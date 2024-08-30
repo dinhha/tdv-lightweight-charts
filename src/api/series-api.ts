@@ -7,6 +7,7 @@ import { clone, merge } from '../helpers/strict-type-checks';
 
 import { BarPrice } from '../model/bar';
 import { Coordinate } from '../model/coordinate';
+import { CreatePriceLineRayOptions, PriceLineRayOptions } from '../model/custom-price-line-ray';
 import { CreateRectangleOptions, RectangleOptions } from '../model/custom-rectangle';
 import { DataUpdatesConsumer, SeriesDataItemTypeMap, WhitespaceData } from '../model/data-consumer';
 import { checkItemsAreOrdered, checkPriceLineOptions, checkSeriesValuesType } from '../model/data-validators';
@@ -25,17 +26,20 @@ import {
 } from '../model/series-options';
 import { Logical, Range, TimePointIndex } from '../model/time-data';
 import { TimeScaleVisibleRange } from '../model/time-scale-visible-range';
+import { LineStyle } from '../renderers/draw-line';
 
 import { IPriceScaleApiProvider } from './chart-api';
 import { getSeriesDataCreator } from './get-series-data-creator';
 import { type IChartApiBase } from './ichart-api';
 import { IPriceLine } from './iprice-line';
+import { IPriceLineRay } from './iprice-line-ray';
 import { IPriceScaleApi } from './iprice-scale-api';
 import { IRectangle } from './irectangle';
 import { BarsInfo, DataChangedHandler, DataChangedScope, ISeriesApi } from './iseries-api';
 import { ISeriesPrimitive } from './iseries-primitive-api';
 import { priceLineOptionsDefaults } from './options/price-line-options-defaults';
 import { PriceLine } from './price-line-api';
+import { PriceLineRay } from './price-line-ray-api';
 import { Rectangle } from './rectangle-api';
 
 export class SeriesApi<
@@ -232,6 +236,20 @@ export class SeriesApi<
 
 	public removeRectangle(rect: IRectangle): void {
 		this._series.removeRectangle((rect as Rectangle).rectangle());
+	}
+
+	public createPriceLineRay(options: CreatePriceLineRayOptions): IPriceLineRay {
+		const strictOptions = merge(clone({
+			lineStyle: LineStyle.Dashed,
+			lineWidth: 1,
+			lineVisible: true,
+		}), options) as PriceLineRayOptions;
+		const priceline = this._series.createPriceLineRay(strictOptions);
+		return new PriceLineRay(priceline);
+	}
+
+	public removePriceLineRay(priceline: IPriceLineRay): void {
+		this._series.removePriceLineRay((priceline as PriceLineRay).priceLine());
 	}
 
 	public seriesType(): TSeriesType {
