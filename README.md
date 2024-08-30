@@ -5,7 +5,7 @@
     <img width="200" src="https://github.com/tradingview/lightweight-charts/raw/master/.github/logo.svg?sanitize=true">
   </a>
 
-  <h1>Lightweight Charts</h1>
+  <h1>Lightweight Charts™</h1>
 
   [![CircleCI][ci-img]][ci-link]
   [![npm version][npm-version-img]][npm-link]
@@ -18,9 +18,9 @@
 
 [Demos][demo-url] | [Documentation](https://tradingview.github.io/lightweight-charts/) | [Discord community](https://discord.gg/UC7cGkvn4U) | [Reddit](https://www.reddit.com/r/TradingView/)
 
-TradingView Lightweight Charts are one of the smallest and fastest financial HTML5 charts.
+TradingView Lightweight Charts™ are one of the smallest and fastest financial HTML5 charts.
 
-The Lightweight Charting Library is the best choice for you if you want to display financial data as an interactive chart on your web page without affecting your web page loading speed and performance.
+The Lightweight Charts™ library is the best choice for you if you want to display financial data as an interactive chart on your web page without affecting your web page loading speed and performance.
 
 It is the best choice for you if you want to replace static image charts with interactive ones.
 The size of the library is close to static images but if you have dozens of image charts on a web page then using this library can make the size of your web page smaller.
@@ -103,6 +103,7 @@ This software incorporates several parts of tslib (<https://github.com/Microsoft
 This license requires specifying TradingView as the product creator.
 You shall add the "attribution notice" from the NOTICE file and a link to <https://www.tradingview.com/> to the page of your website or mobile application that is available to your users.
 As thanks for creating this product, we'd be grateful if you add it in a prominent place.
+You can use the [`attributionLogo`](https://tradingview.github.io/lightweight-charts/docs/api/interfaces/LayoutOptions#attributionLogo) chart option for displaying an appropriate link to <https://www.tradingview.com/> on the chart itself, which will satisfy the link requirement.
 
 [demo-url]: https://www.tradingview.com/lightweight-charts/
 

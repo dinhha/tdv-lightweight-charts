@@ -14,20 +14,23 @@ import { clearRect, clearRectWithGradient } from '../helpers/canvas-helpers';
 import { IDestroyable } from '../helpers/idestroyable';
 import { makeFont } from '../helpers/make-font';
 
-import { ChartOptionsInternal } from '../model/chart-model';
+import { ChartOptionsInternalBase } from '../model/chart-model';
 import { Coordinate } from '../model/coordinate';
 import { IDataSource } from '../model/idata-source';
 import { InvalidationLevel } from '../model/invalidate-mask';
 import { IPriceDataSource } from '../model/iprice-data-source';
+import { SeriesPrimitivePaneViewZOrder } from '../model/iseries-primitive';
 import { LayoutOptions } from '../model/layout-options';
 import { PriceScalePosition } from '../model/pane';
 import { PriceMark, PriceScale } from '../model/price-scale';
 import { TextWidthCache } from '../model/text-width-cache';
 import { PriceAxisViewRendererOptions } from '../renderers/iprice-axis-view-renderer';
 import { PriceAxisRendererOptionsProvider } from '../renderers/price-axis-renderer-options-provider';
+import { IAxisView } from '../views/pane/iaxis-view';
 import { IPriceAxisView } from '../views/price-axis/iprice-axis-view';
 
-import { createBoundCanvas } from './canvas-utils';
+import { createBoundCanvas, releaseCanvas } from './canvas-utils';
+import { IPriceAxisViewsGetter } from './iaxis-view-getters';
 import { suggestPriceScaleWidth } from './internal-layout-sizes-hints';
 import { MouseEventHandler, MouseEventHandlers, TouchMouseEvent } from './mouse-event-handler';
 import { PaneWidget } from './pane-widget';
@@ -49,9 +52,75 @@ const enum Constants {
 	LabelOffset = 5,
 }
 
+function buildPriceAxisViewsGetter(
+	zOrder: SeriesPrimitivePaneViewZOrder,
+	priceScaleId: PriceAxisWidgetSide
+): IPriceAxisViewsGetter {
+	return (source: IDataSource): readonly IAxisView[] => {
+		const psId = source.priceScale()?.id() ?? '';
+		if (psId !== priceScaleId) {
+			// exclude if source is using a different price scale.
+			return [];
+		}
+		return source.pricePaneViews?.(zOrder) ?? [];
+	};
+}
+
+function recalculateOverlapping(
+	views: IPriceAxisView[],
+	direction: 1 | -1,
+	scaleHeight: number,
+	rendererOptions: Readonly<PriceAxisViewRendererOptions>
+): void {
+	if (!views.length) {
+		return;
+	}
+	let currentGroupStart = 0;
+	const center = scaleHeight / 2;
+
+	const initLabelHeight = views[0].height(rendererOptions, true);
+	let spaceBeforeCurrentGroup = direction === 1
+		? center - (views[0].getFixedCoordinate() - initLabelHeight / 2)
+		: views[0].getFixedCoordinate() - initLabelHeight / 2 - center;
+	spaceBeforeCurrentGroup = Math.max(0, spaceBeforeCurrentGroup);
+
+	for (let i = 1; i < views.length; i++) {
+		const view = views[i];
+		const prev = views[i - 1];
+		const height = prev.height(rendererOptions, false);
+		const coordinate = view.getFixedCoordinate();
+		const prevFixedCoordinate = prev.getFixedCoordinate();
+
+		const overlap = direction === 1
+			? coordinate > prevFixedCoordinate - height
+			: coordinate < prevFixedCoordinate + height;
+
+		if (overlap) {
+			const fixedCoordinate = prevFixedCoordinate - height * direction;
+			view.setFixedCoordinate(fixedCoordinate);
+			const edgePoint = fixedCoordinate - direction * height / 2;
+			const outOfViewport = direction === 1 ? edgePoint < 0 : edgePoint > scaleHeight;
+			if (outOfViewport && spaceBeforeCurrentGroup > 0) {
+				// shift the whole group up or down
+				const desiredGroupShift = direction === 1 ? -1 - edgePoint : edgePoint - scaleHeight;
+				const possibleShift = Math.min(desiredGroupShift, spaceBeforeCurrentGroup);
+				for (let k = currentGroupStart; k < views.length; k++) {
+					views[k].setFixedCoordinate(views[k].getFixedCoordinate() + direction * possibleShift);
+				}
+				spaceBeforeCurrentGroup -= possibleShift;
+			}
+		} else {
+			currentGroupStart = i;
+			spaceBeforeCurrentGroup = direction === 1
+				? prevFixedCoordinate - height - coordinate
+				: coordinate - (prevFixedCoordinate + height);
+		}
+	}
+}
+
 export class PriceAxisWidget implements IDestroyable {
 	private readonly _pane: PaneWidget;
-	private readonly _options: Readonly<ChartOptionsInternal>;
+	private readonly _options: Readonly<ChartOptionsInternalBase>;
 	private readonly _layoutOptions: Readonly<LayoutOptions>;
 	private readonly _rendererOptionsProvider: PriceAxisRendererOptionsProvider;
 	private readonly _isLeft: boolean;
@@ -73,12 +142,20 @@ export class PriceAxisWidget implements IDestroyable {
 	private _prevOptimalWidth: number = 0;
 	private _isSettingSize: boolean = false;
 
-	public constructor(pane: PaneWidget, options: Readonly<ChartOptionsInternal>, rendererOptionsProvider: PriceAxisRendererOptionsProvider, side: PriceAxisWidgetSide) {
+	private _sourcePaneViews: IPriceAxisViewsGetter;
+	private _sourceTopPaneViews: IPriceAxisViewsGetter;
+	private _sourceBottomPaneViews: IPriceAxisViewsGetter;
+
+	public constructor(pane: PaneWidget, options: Readonly<ChartOptionsInternalBase>, rendererOptionsProvider: PriceAxisRendererOptionsProvider, side: PriceAxisWidgetSide) {
 		this._pane = pane;
 		this._options = options;
 		this._layoutOptions = options.layout;
 		this._rendererOptionsProvider = rendererOptionsProvider;
 		this._isLeft = side === 'left';
+
+		this._sourcePaneViews = buildPriceAxisViewsGetter('normal', side);
+		this._sourceTopPaneViews = buildPriceAxisViewsGetter('top', side);
+		this._sourceBottomPaneViews = buildPriceAxisViewsGetter('bottom', side);
 
 		this._cell = document.createElement('div');
 		this._cell.style.height = '100%';
@@ -120,7 +197,7 @@ export class PriceAxisWidget implements IDestroyable {
 			this._topCanvasBinding.canvasElement,
 			handler,
 			{
-				treatVertTouchDragAsPageScroll: () => false,
+				treatVertTouchDragAsPageScroll: () => !this._options.handleScroll.vertTouchDrag,
 				treatHorzTouchDragAsPageScroll: () => true,
 			}
 		);
@@ -130,9 +207,11 @@ export class PriceAxisWidget implements IDestroyable {
 		this._mouseEventHandler.destroy();
 
 		this._topCanvasBinding.unsubscribeSuggestedBitmapSizeChanged(this._topCanvasSuggestedBitmapSizeChangedHandler);
+		releaseCanvas(this._topCanvasBinding.canvasElement);
 		this._topCanvasBinding.dispose();
 
 		this._canvasBinding.unsubscribeSuggestedBitmapSizeChanged(this._canvasSuggestedBitmapSizeChangedHandler);
+		releaseCanvas(this._canvasBinding.canvasElement);
 		this._canvasBinding.dispose();
 
 		if (this._priceScale !== null) {
@@ -275,7 +354,9 @@ export class PriceAxisWidget implements IDestroyable {
 					this._drawBackground(scope);
 					this._drawBorder(scope);
 				});
+				this._pane.drawAdditionalSources(target, this._sourceBottomPaneViews);
 				this._drawTickMarks(target);
+				this._pane.drawAdditionalSources(target, this._sourcePaneViews);
 				this._drawBackLabels(target);
 			}
 		}
@@ -287,6 +368,7 @@ export class PriceAxisWidget implements IDestroyable {
 				ctx.clearRect(0, 0, bitmapSize.width, bitmapSize.height);
 			});
 			this._drawCrosshairLabel(topTarget);
+			this._pane.drawAdditionalSources(topTarget, this._sourceTopPaneViews);
 		}
 	}
 
@@ -484,8 +566,6 @@ export class PriceAxisWidget implements IDestroyable {
 		if (this._size === null || this._priceScale === null) {
 			return;
 		}
-		let center = this._size.height / 2;
-
 		const views: IPriceAxisView[] = [];
 		const orderedSources = this._priceScale.orderedSources().slice(); // Copy of array
 		const pane = this._pane;
@@ -503,8 +583,6 @@ export class PriceAxisWidget implements IDestroyable {
 			});
 		}
 
-		// we can use any, but let's use the first source as "center" one
-		const centerSource = this._priceScale.dataSources()[0];
 		const priceScale = this._priceScale;
 
 		const updateForSources = (sources: IDataSource[]) => {
@@ -517,9 +595,6 @@ export class PriceAxisWidget implements IDestroyable {
 						views.push(view);
 					}
 				});
-				if (centerSource === source && sourceViews.length > 0) {
-					center = sourceViews[0].coordinate();
-				}
 			});
 		};
 
@@ -533,13 +608,15 @@ export class PriceAxisWidget implements IDestroyable {
 			return;
 		}
 
-		this._fixLabelOverlap(views, rendererOptions, center);
+		this._fixLabelOverlap(views, rendererOptions);
 	}
 
-	private _fixLabelOverlap(views: IPriceAxisView[], rendererOptions: Readonly<PriceAxisViewRendererOptions>, center: number): void {
+	private _fixLabelOverlap(views: IPriceAxisView[], rendererOptions: Readonly<PriceAxisViewRendererOptions>): void {
 		if (this._size === null) {
 			return;
 		}
+
+		const center = this._size.height / 2;
 
 		// split into two parts
 		const top = views.filter((view: IPriceAxisView) => view.coordinate() <= center);
@@ -547,12 +624,6 @@ export class PriceAxisWidget implements IDestroyable {
 
 		// sort top from center to top
 		top.sort((l: IPriceAxisView, r: IPriceAxisView) => r.coordinate() - l.coordinate());
-
-		// share center label
-		if (top.length && bottom.length) {
-			bottom.push(top[0]);
-		}
-
 		bottom.sort((l: IPriceAxisView, r: IPriceAxisView) => l.coordinate() - r.coordinate());
 
 		for (const view of views) {
@@ -567,29 +638,8 @@ export class PriceAxisWidget implements IDestroyable {
 			}
 		}
 
-		for (let i = 1; i < top.length; i++) {
-			const view = top[i];
-			const prev = top[i - 1];
-			const height = prev.height(rendererOptions, false);
-			const coordinate = view.coordinate();
-			const prevFixedCoordinate = prev.getFixedCoordinate();
-
-			if (coordinate > prevFixedCoordinate - height) {
-				view.setFixedCoordinate(prevFixedCoordinate - height);
-			}
-		}
-
-		for (let j = 1; j < bottom.length; j++) {
-			const view = bottom[j];
-			const prev = bottom[j - 1];
-			const height = prev.height(rendererOptions, true);
-			const coordinate = view.coordinate();
-			const prevFixedCoordinate = prev.getFixedCoordinate();
-
-			if (coordinate < prevFixedCoordinate + height) {
-				view.setFixedCoordinate(prevFixedCoordinate + height);
-			}
-		}
+		recalculateOverlapping(top, 1, this._size.height, rendererOptions);
+		recalculateOverlapping(bottom, -1, this._size.height, rendererOptions);
 	}
 
 	private _drawBackLabels(target: CanvasRenderingTarget2D): void {

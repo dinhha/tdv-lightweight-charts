@@ -1,7 +1,8 @@
-import { ChartModel } from '../../model/chart-model';
+import { IChartModelBase } from '../../model/chart-model';
 import { Coordinate } from '../../model/coordinate';
 import { CustomRectangle } from '../../model/custom-rectangle';
-import { Series } from '../../model/series';
+import { ISeries } from '../../model/series';
+import { SeriesType } from '../../model/series-options';
 import { IPaneRenderer } from '../../renderers/ipane-renderer';
 import { RectangleRenderer, RectangleRendererData } from '../../renderers/rectangle-renderer';
 
@@ -18,14 +19,14 @@ export class CustomRectangleView implements IPaneView {
 		visible: false,
 	};
 
-	protected readonly _series: Series;
-	protected readonly _model: ChartModel;
+	protected readonly _series: ISeries<SeriesType>;
+	protected readonly _model: IChartModelBase;
 	protected readonly _rectRenderer: RectangleRenderer = new RectangleRenderer();
 	private _invalidated: boolean = true;
 
 	private readonly _rect: CustomRectangle;
 
-	public constructor(series: Series, rect: CustomRectangle) {
+	public constructor(series: ISeries<SeriesType>, rect: CustomRectangle) {
 		this._series = series;
 		this._rect = rect;
 		this._model = series.model();

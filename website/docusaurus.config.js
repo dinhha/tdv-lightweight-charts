@@ -328,7 +328,7 @@ async function getConfig() {
 							],
 						},
 						{
-							title: 'Lightweight Charts Community',
+							title: 'Lightweight Charts™ Community',
 							items: [
 								{
 									label: 'Stack Overflow',
@@ -348,8 +348,12 @@ async function getConfig() {
 							title: 'More',
 							items: [
 								{
-									label: 'GitHub',
-									href: projectUrl,
+									label: 'Advanced Charts',
+									href: 'https://www.tradingview.com/charting-library-docs/',
+								},
+								{
+									label: 'TradingView Widgets',
+									href: 'https://www.tradingview.com/widget/',
 								},
 							],
 						},

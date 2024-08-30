@@ -1,4 +1,4 @@
-import { convertTime } from '../api/data-layer';
+// import { convertTime } from '../api/data-layer';
 
 import { merge } from '../helpers/strict-type-checks';
 
@@ -6,8 +6,9 @@ import { CustomRectangleView } from '../views/pane/custom-rectangle-pane-view';
 import { IPaneView } from '../views/pane/ipane-view';
 
 import { Coordinate } from './coordinate';
-import { Series } from './series';
-import { Time } from './time-data';
+import { InternalHorzScaleItem } from './ihorz-scale-behavior';
+import { ISeries } from './series';
+import { SeriesType } from './series-options';
 
 export interface RectangleOptions {
 	id?: string;
@@ -15,18 +16,18 @@ export interface RectangleOptions {
 	borderColor: string;
 	fromPrice: number;
 	toPrice: number;
-	fromTime: Time;
-	toTime: Time;
+	fromTime: InternalHorzScaleItem;
+	toTime: InternalHorzScaleItem;
 }
 
 export type CreateRectangleOptions = Partial<RectangleOptions>;
 
 export class CustomRectangle {
-	private readonly _series: Series;
+	private readonly _series: ISeries<SeriesType>;
 	private readonly _rectangleView: CustomRectangleView;
 	private readonly _options: RectangleOptions;
 
-	public constructor(series: Series, options: RectangleOptions) {
+	public constructor(series: ISeries<SeriesType>, options: RectangleOptions) {
 		this._series = series;
 		this._options = options;
 		this._rectangleView = new CustomRectangleView(series, this);
@@ -59,14 +60,19 @@ export class CustomRectangle {
 			return null;
 		}
 
-		const timeRange = timeScale.visibleTimeRange();
-		let fromTime = this._options.fromTime;
+		const timeRange = timeScale.visibleStrictRange();
+		const fromTime = this._options.fromTime;
+		let timeIndex = timeScale.timeToIndex(fromTime, true);
 
-		if (timeRange && Number(timeRange.from.timestamp) > Number(this._options.fromTime)) {
-			fromTime = timeRange.from.timestamp;
+		if (timeRange && (timeIndex === null || timeRange.left() > timeIndex)) {
+			timeIndex = timeRange.left();
 		}
 
-		return this._convertTime(fromTime);
+		if (timeIndex === null) {
+			return null;
+		}
+
+		return timeScale.indexToCoordinate(timeIndex);
 	}
 
 	public y0Coord(): Coordinate | null {
@@ -79,16 +85,17 @@ export class CustomRectangle {
 		}
 
 		const firstValue = series.firstValue();
-		if (firstValue === null) {
+		const priceRange = priceScale.priceRange();
+
+		if (firstValue === null || priceRange === null) {
 			return null;
 		}
 
-		// const priceRange = priceScale.priceRange();
-		const fromPrice = this._options.fromPrice;
+		let fromPrice = this._options.fromPrice;
 
-		// if (priceRange && priceRange?.minValue() > fromPrice) {
-			// fromPrice = priceRange.minValue();
-		// }
+		if (priceRange.minValue() > fromPrice) {
+			fromPrice = priceRange.minValue();
+		}
 
 		return priceScale.priceToCoordinate(fromPrice, firstValue.value);
 	}
@@ -102,21 +109,21 @@ export class CustomRectangle {
 			return null;
 		}
 
-		const logicRange = timeScale.visibleLogicalRange();
+		const timeRange = timeScale.visibleStrictRange();
 
-		if (!logicRange) {
+		if (!timeRange) {
 			return null;
 		}
 
-		const timeRange = timeScale.visibleTimeRange();
-		const right = logicRange.right().valueOf() as Coordinate;
-		let toTime = this._options.toTime;
+		const right = timeRange.right();
+		const toTime = this._options.toTime;
+		let timeIndex = timeScale.timeToIndex(toTime, true);
 
-		if (timeRange && Number(timeRange.to.timestamp) < Number(this._options.toTime)) {
-			toTime = timeRange.to.timestamp;
+		if (timeIndex === null || right < timeIndex) {
+			timeIndex = right;
 		}
 
-		return this._convertTime(toTime) || right;
+		return timeScale.indexToCoordinate(timeIndex);
 	}
 
 	public y1Coord(): Coordinate | null {
@@ -129,28 +136,18 @@ export class CustomRectangle {
 		}
 
 		const firstValue = series.firstValue();
-		if (firstValue === null) {
+		const priceRange = priceScale.priceRange();
+
+		if (firstValue === null || priceRange === null) {
 			return null;
 		}
 
-		// const priceRange = priceScale.priceRange();
-		const toPrice = this._options.toPrice;
+		let toPrice = this._options.toPrice;
 
-		// if (priceRange && priceRange?.maxValue() < toPrice) {
-			// toPrice = priceRange.maxValue();
-		// }
+		if (priceRange.maxValue() < toPrice) {
+			toPrice = priceRange.maxValue();
+		}
 
 		return priceScale.priceToCoordinate(toPrice, firstValue.value);
-	}
-
-	private _convertTime(time: Time): Coordinate | null {
-		const timePoint = convertTime(time);
-		const timeScale = this._series.model().timeScale();
-		const timePointIndex = timeScale.timeToIndex(timePoint, false);
-		if (timePointIndex === null) {
-			return null;
-		}
-
-		return timeScale.indexToCoordinate(timePointIndex);
 	}
 }

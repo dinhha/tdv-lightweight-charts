@@ -8,7 +8,7 @@ sidebar_position: 0
 
 ## Requirements
 
-First of all, Lightweight Charts is _a client-side_ library.
+First of all, Lightweight Charts™ is _a client-side_ library.
 This means that it does not and cannot work on the server-side (i.e. NodeJS), at least out of the box.
 
 The code of `lightweight-charts` package is targeted to [_es2016_ language specification](https://262.ecma-international.org/7.0/).
@@ -38,6 +38,18 @@ The library ships with the following build variants:
 |Yes (standalone)|DEV|`lightweight-charts.standalone.development.mjs`|-|`lightweight-charts.standalone.development.js`|
 
 ⚠️ **Deprecation note:** CommonJS support will be removed from the library at the start of 2024.
+
+## License and attribution
+
+:::tip
+
+The Lightweight Charts™ license requires specifying TradingView as the product creator.
+
+:::
+
+You shall add the "attribution notice" from the [NOTICE](https://github.com/tradingview/lightweight-charts/blob/master/NOTICE) file and a link to <https://www.tradingview.com/> to the page of your website or mobile application that is available to your users.
+
+As thanks for creating Lightweight Charts™, we'd be grateful if you add the attribution notice in a prominent place.
 
 ## Creating a chart
 

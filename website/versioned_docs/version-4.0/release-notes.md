@@ -15,11 +15,36 @@ sidebar_position: 8
 <!-- markdownlint-disable no-emphasis-as-heading -->
 <!-- ^ using emphasis as headings so we don't have duplicate headers -->
 
+## 4.0.1
+
+**Enhancements**
+
+- Add the ability to specify font colour for the Priceline labels. [#1274](https://github.com/tradingview/lightweight-charts/issues/1274) [#1287](https://github.com/tradingview/lightweight-charts/issues/1287)
+- Ignore resize method if `autoSize` is active, and added API to check if active. [#1301](https://github.com/tradingview/lightweight-charts/issues/1301)
+
+**Bug fixes**
+
+- Typo in customization guide. Thanks [@UcheAzubuko](https://github.com/UcheAzubuko). [#1284](https://github.com/tradingview/lightweight-charts/issues/1284)
+- Inability to immediately add markers when `autoSize` chart option is enabled. Thanks [@victorbrambati](https://github.com/victorbrambati). [#1271](https://github.com/tradingview/lightweight-charts/issues/1271) [#1281](https://github.com/tradingview/lightweight-charts/issues/1281)
+- First render when using `autosize` doesn't show the latest bars. Thanks [@victorbrambati](https://github.com/victorbrambati) [#1281](https://github.com/tradingview/lightweight-charts/issues/1281). [#1282](https://github.com/tradingview/lightweight-charts/issues/1282)
+- Series rendering bug when outside of visible range. [#1293](https://github.com/tradingview/lightweight-charts/issues/1293) [#1294](https://github.com/tradingview/lightweight-charts/issues/1294)
+- Auto contrast text color for crosshair labels. [#1309](https://github.com/tradingview/lightweight-charts/issues/1309) [#1310](https://github.com/tradingview/lightweight-charts/issues/1310)
+- Hit box from the text of marker incorrectly shifted to the right. [#1270](https://github.com/tradingview/lightweight-charts/issues/1270) [#1305](https://github.com/tradingview/lightweight-charts/issues/1305)
+
+As always, we thank you for your support and help in making Lightweight Charts™ the best product on the financial web. And a big shout out to our hero contributors [@victorbrambati](https://github.com/victorbrambati), and [@UcheAzubuko](https://github.com/UcheAzubuko)!
+
+You can always send us your feedback via GitHub.
+
+We look forward to hearing from you! And as always, happy trading!
+Team TradingView
+
+See [issues assigned to this version's milestone](https://github.com/tradingview/lightweight-charts/milestone/25?closed=1) or [changes since the last published version](https://github.com/tradingview/lightweight-charts/compare/v4.0.0..v4.0.1).
+
 ## 4.0.0
 
 Long overdue as it’s been nearly 1 year since our last major update, but behold before all the changes that have happened over the last 12 months.
 
-In total, more than 20 tickets have been addressed with one of the most important ones being **fancy-canvas** – the library we use to configure HTML canvas in Lightweight Charts.
+In total, more than 20 tickets have been addressed with one of the most important ones being **fancy-canvas** – the library we use to configure HTML canvas in Lightweight Charts™.
 
 Please view the migration guide here: [Migrating from v3 to v4](./migrations/from-v3-to-v4).
 
@@ -81,7 +106,7 @@ Please view the migration guide here: [Migrating from v3 to v4](./migrations/fro
 - Crosshair label text appears on the chart during initial render | [#1255](https://github.com/tradingview/lightweight-charts/issues/1255)
   - Small text artefacts from the crosshair no longer appear on the time axis before any interaction with the chart.
 
-As always, we thank you for your support and help in making Lightweight Charts the best product on the financial web. And a big shout out to our hero contributors [thanhlmm](https://github.com/thanhlmm), [CommanderRoot](https://github.com/CommanderRoot), [samhainsamhainsamhain](https://github.com/samhainsamhainsamhain) & colleague [Nipheris](https://github.com/Nipheris)!
+As always, we thank you for your support and help in making Lightweight Charts™ the best product on the financial web. And a big shout out to our hero contributors [thanhlmm](https://github.com/thanhlmm), [CommanderRoot](https://github.com/CommanderRoot), [samhainsamhainsamhain](https://github.com/samhainsamhainsamhain) & colleague [Nipheris](https://github.com/Nipheris)!
 You can always send us your feedback via GitHub.
 We look forward to hearing from you! And as always, happy trading!
 Team TradingView
@@ -90,7 +115,7 @@ See [issues assigned to this version's milestone](https://github.com/tradingview
 
 ## 3.8.0
 
-We're happy to announce the next release of Lightweight Charts library. This release includes many improvements and bug fixes (as usual), but we are thrilled to say that from this version the library has its own [documentation website](https://tradingview.github.io/lightweight-charts/) that replaces the documentation in the repository. Check it out and share your feedback in [this discussion thread](https://github.com/tradingview/lightweight-charts/discussions/921).
+We're happy to announce the next release of Lightweight Charts™ library. This release includes many improvements and bug fixes (as usual), but we are thrilled to say that from this version the library has its own [documentation website](https://tradingview.github.io/lightweight-charts/) that replaces the documentation in the repository. Check it out and share your feedback in [this discussion thread](https://github.com/tradingview/lightweight-charts/discussions/921).
 
 **Enhancement**
 
