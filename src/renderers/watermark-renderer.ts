@@ -10,6 +10,13 @@ export interface WatermarkRendererLineData {
 	zoom: number;
 }
 
+export interface WatermarkRendererImageData {
+	url: string;
+	width: number;
+	height: number;
+	zoom: number;
+}
+
 /**
  * Represents a horizontal alignment.
  */
@@ -21,6 +28,7 @@ export type VertAlign = 'top' | 'center' | 'bottom';
 
 export interface WatermarkRendererData {
 	lines: WatermarkRendererLineData[];
+	image: WatermarkRendererImageData;
 	color: string;
 	visible: boolean;
 	horzAlign: HorzAlign;
@@ -30,6 +38,7 @@ export interface WatermarkRendererData {
 export class WatermarkRenderer extends MediaCoordinatesPaneRenderer {
 	private readonly _data: WatermarkRendererData;
 	private _metricsCache: Map<string, Map<string, number>> = new Map();
+	private _imageCache: Map<string, HTMLImageElement> = new Map();
 
 	public constructor(data: WatermarkRendererData) {
 		super();
@@ -79,6 +88,12 @@ export class WatermarkRenderer extends MediaCoordinatesPaneRenderer {
 
 		ctx.fillStyle = this._data.color;
 
+		// Draw watermark image if available
+		if (this._data.image && this._data.image.url) {
+			this._drawImage(ctx, mediaSize.width, mediaSize.height, vertOffset);
+		}
+
+		// Draw watermark text
 		for (const line of this._data.lines) {
 			ctx.save();
 
@@ -108,6 +123,56 @@ export class WatermarkRenderer extends MediaCoordinatesPaneRenderer {
 			ctx.restore();
 			vertOffset += line.lineHeight * line.zoom;
 		}
+	}
+
+	private _drawImage(ctx: CanvasRenderingContext2D, mediaWidth: number, mediaHeight: number, vertOffset: number): void {
+		const imageUrl = this._data.image.url;
+		let img = this._imageCache.get(imageUrl);
+
+		if (!img) {
+			img = new Image();
+			img.onload = () => {
+				this._imageCache.set(imageUrl, img!);
+				this._drawImageOnCanvas(ctx, img!, mediaWidth, mediaHeight, vertOffset);
+			};
+			img.src = imageUrl;
+		} else {
+			this._drawImageOnCanvas(ctx, img, mediaWidth, mediaHeight, vertOffset);
+		}
+	}
+
+	private _drawImageOnCanvas(ctx: CanvasRenderingContext2D, img: HTMLImageElement, mediaWidth: number, mediaHeight: number, vertOffset: number): void {
+		let imgWidth = this._data.image.width;
+		let imgHeight = this._data.image.height;
+		
+		// Calculate image zoom if needed
+		if (imgWidth > mediaWidth) {
+			const zoom = mediaWidth / imgWidth;
+			imgWidth *= zoom;
+			imgHeight *= zoom;
+		}
+
+		let imgHorzOffset = 0;
+		switch (this._data.horzAlign) {
+			case 'left':
+				imgHorzOffset = 0;
+				break;
+			case 'center':
+				imgHorzOffset = (mediaWidth - imgWidth) / 2;
+				break;
+			case 'right':
+				imgHorzOffset = mediaWidth - imgWidth;
+				break;
+		}
+
+		let imgVertOffset = vertOffset;
+		if (this._data.vertAlign === 'center') {
+			imgVertOffset = (mediaHeight - imgHeight) / 2;
+		} else if (this._data.vertAlign === 'bottom') {
+			imgVertOffset = mediaHeight - imgHeight;
+		}
+
+		ctx.drawImage(img, imgHorzOffset, imgVertOffset, imgWidth, imgHeight);
 	}
 
 	private _metrics(ctx: CanvasRenderingContext2D, text: string): number {

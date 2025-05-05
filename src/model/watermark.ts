@@ -63,6 +63,12 @@ export interface WatermarkOptions {
 	 * @defaultValue `'center'`
 	 */
 	vertAlign: VertAlign;
+
+	imageUrl: string;
+
+	imageWidth: number;
+
+	imageHeight: number;
 }
 
 export class Watermark extends DataSource {

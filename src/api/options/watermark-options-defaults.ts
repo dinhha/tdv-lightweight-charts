@@ -11,4 +11,7 @@ export const watermarkOptionsDefaults: WatermarkOptions = {
 	text: '',
 	horzAlign: 'center',
 	vertAlign: 'center',
+	imageHeight: 0,
+	imageWidth: 0,
+	imageUrl: '',
 };

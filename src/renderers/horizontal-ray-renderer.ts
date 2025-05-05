@@ -65,7 +65,7 @@ export class HorizontalRayRenderer extends BitmapCoordinatesPaneRenderer {
 			x1 = Math.round(this._data.x1 * horizontalPixelRatio);
 		}
 
-		if (y < 0 || y > bitmapSize.height || x0 < 0 || x1 > bitmapSize.width) {
+		if (y < 0 || y > bitmapSize.height) {
 			return;
 		}
 

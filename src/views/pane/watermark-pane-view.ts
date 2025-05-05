@@ -16,6 +16,12 @@ export class WatermarkPaneView implements IUpdatablePaneView {
 		lines: [],
 		vertAlign: 'center',
 		horzAlign: 'center',
+		image: {
+			url: '',
+			width: 0,
+			height: 0,
+			zoom: 0,
+		},
 	};
 	private readonly _renderer: WatermarkRenderer = new WatermarkRenderer(this._rendererData);
 
@@ -58,5 +64,14 @@ export class WatermarkPaneView implements IUpdatablePaneView {
 				zoom: 0,
 			},
 		];
+
+		if (options.imageUrl) {
+			data.image = {
+				url: options.imageUrl,
+				width: options.imageWidth,
+				height: options.imageHeight,
+				zoom: 0,
+			};
+		}
 	}
 }
